@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "docker/thor"
+require "ddev"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
