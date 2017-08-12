@@ -3,6 +3,7 @@
 require "thor"
 require "pty"
 require "rainbow"
+require "config"
 
 require_relative "../lib/ddev/version"
 
@@ -49,6 +50,8 @@ module Ddev
     desc "push", "Upload locally built images to the remote store"
     option :env, default: "dev", type: :string
     def push(*images)
+      load_config!
+
       env = options[:env]
       images = ALL_IMAGES[env] if images.empty?
       images = Array(images)
@@ -203,6 +206,38 @@ module Ddev
         end
 
         opts
+      end
+
+      def config_path
+        path = File.expand_path "../.ddev.yaml", __FILE__
+
+        unless File.exist? path
+          error = "Could not find config file at #{path}"
+          puts Rainbow(error).red
+          exit 1
+        end
+
+        path
+      end
+
+      def check_settings!
+        required_keys = %w(
+          project
+        )
+
+        required_keys.each do |key|
+          unless Settings.send key
+            error = "Config is missing required key '#{key}'. Please add it " \
+              "to #{config_path} and try again."
+            puts Rainbow(error).red
+            exit 1
+          end
+        end
+      end
+
+      def load_config!
+        Config.load_and_set_settings(config_path)
+        check_settings!
       end
     end
   end
